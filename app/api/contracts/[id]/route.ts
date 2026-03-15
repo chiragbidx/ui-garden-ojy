@@ -1,0 +1,92 @@
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db/client";
+import { contracts, contractAuditLog, AUDIT_ACTION } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
+import { getAuthSession } from "@/lib/auth/session";
+import { z } from "zod";
+
+// For GET (fetch one contract, for edit hydration)
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+  const session = await getAuthSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const [teamMember] = await db.query.teamMembers.findMany({
+    where: eq("user_id", session.userId),
+    limit: 1,
+  });
+  if (!teamMember) return NextResponse.json({ error: "No team" }, { status: 403 });
+
+  const [contract] = await db
+    .select({
+      id: contracts.id,
+      title: contracts.title,
+      content: contracts.content,
+    })
+    .from(contracts)
+    .where(eq(contracts.id, params.id))
+    .where(eq(contracts.teamId, teamMember.teamId))
+    .limit(1);
+
+  if (!contract) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  return NextResponse.json(contract);
+}
+
+const editSchema = z.object({
+  title: z.string().min(5).max(255),
+  content: z.string().min(30),
+});
+
+// PATCH (edit)
+export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+  const body = await req.json();
+  const result = editSchema.safeParse(body);
+  if (!result.success) return NextResponse.json({ error: result.error.flatten().fieldErrors }, { status: 422 });
+
+  const session = await getAuthSession();
+  if (!session) {
+    return NextResponse.json({ error: { _: ["Not authenticated"] } }, { status: 401 });
+  }
+
+  const [teamMember] = await db.query.teamMembers.findMany({
+    where: eq("user_id", session.userId),
+    limit: 1,
+  });
+  if (!teamMember) return NextResponse.json({ error: { _: ["Not a team member."] } }, { status: 403 });
+
+  // Only allow editing if you are the contract creator or an admin
+  const [contract] = await db
+    .select()
+    .from(contracts)
+    .where(eq(contracts.id, params.id))
+    .where(eq(contracts.teamId, teamMember.teamId))
+    .limit(1);
+
+  if (!contract) {
+    return NextResponse.json({ error: { _: ["Contract not found"] } }, { status: 404 });
+  }
+
+  if (contract.createdBy !== session.userId /* && !isAdmin */) {
+    return NextResponse.json({ error: { _: ["You are not allowed to edit this contract"] } }, { status: 403 });
+  }
+
+  await db
+    .update(contracts)
+    .set({
+      title: result.data.title,
+      content: result.data.content,
+      updatedAt: new Date(),
+    })
+    .where(eq(contracts.id, params.id));
+
+  await db.insert(contractAuditLog).values({
+    contractId: params.id,
+    userId: session.userId,
+    action: AUDIT_ACTION.Edited,
+    details: { title: result.data.title },
+  });
+
+  return NextResponse.json({ ok: true });
+}
