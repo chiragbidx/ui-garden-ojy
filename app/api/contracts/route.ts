@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getContractsForTeam } from "@/app/dashboard/contracts/actions";
+import { createContract, getContractsForTeam } from "@/app/dashboard/contracts/actions";
 
 export async function GET(req: NextRequest) {
   const rows = await getContractsForTeam();
@@ -11,4 +11,13 @@ export async function GET(req: NextRequest) {
       updatedAt: row.updatedAt,
     }))
   );
+}
+
+export async function POST(req: NextRequest) {
+  const body = await req.json();
+  const result = await createContract(body);
+  if (result?.ok) {
+    return NextResponse.json({ id: result.id });
+  }
+  return NextResponse.json({ error: result.error || { _: ["Could not create contract"] } }, { status: 422 });
 }
