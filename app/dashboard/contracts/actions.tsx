@@ -1,6 +1,6 @@
 "use server";
 import { db } from "@/lib/db/client";
-import { contracts, contractAuditLog, CONTRACT_STATUS, AUDIT_ACTION } from "@/lib/db/schema";
+import { contracts, contractAuditLog, teamMembers, CONTRACT_STATUS, AUDIT_ACTION } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { getAuthSession } from "@/lib/auth/session";
 import { z } from "zod";
@@ -22,10 +22,12 @@ export async function createContract(input: z.infer<typeof contractCreateSchema>
   }
 
   // For MVP, use first team for user (multi-team support can be extended)
-  const [teamMember] = await db.query.teamMembers.findMany({
-    where: eq("user_id", session.userId),
-    limit: 1,
-  });
+  const [teamMember] = await db
+    .select()
+    .from(teamMembers)
+    .where(eq(teamMembers.userId, session.userId))
+    .limit(1);
+
   if (!teamMember) return { error: { _: ["You are not part of a team."] } };
   const teamId = teamMember.teamId;
 
@@ -61,10 +63,12 @@ export async function getContractsForTeam() {
   }
 
   // For MVP, assume only one team per user; real impl would fetch teamId from context
-  const [teamMember] = await db.query.teamMembers.findMany({
-    where: eq("user_id", session.userId),
-    limit: 1,
-  });
+  const [teamMember] = await db
+    .select()
+    .from(teamMembers)
+    .where(eq(teamMembers.userId, session.userId))
+    .limit(1);
+
   if (!teamMember) return [];
   const teamId = teamMember.teamId;
 
