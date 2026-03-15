@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
-import { contracts, contractAuditLog, AUDIT_ACTION } from "@/lib/db/schema";
+import { contracts, contractAuditLog, teamMembers, AUDIT_ACTION } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { getAuthSession } from "@/lib/auth/session";
 import { z } from "zod";
@@ -20,10 +20,12 @@ export async function GET(req: NextRequest, context: { params: { id: string } } 
   const session = await getAuthSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const [teamMember] = await db.query.teamMembers.findMany({
-    where: eq("user_id", session.userId),
-    limit: 1,
-  });
+  const [teamMember] = await db
+    .select()
+    .from(teamMembers)
+    .where(eq(teamMembers.userId, session.userId))
+    .limit(1);
+
   if (!teamMember) return NextResponse.json({ error: "No team" }, { status: 403 });
 
   const [contract] = await db
@@ -61,10 +63,12 @@ export async function PATCH(req: NextRequest, context: { params: { id: string } 
     return NextResponse.json({ error: { _: ["Not authenticated"] } }, { status: 401 });
   }
 
-  const [teamMember] = await db.query.teamMembers.findMany({
-    where: eq("user_id", session.userId),
-    limit: 1,
-  });
+  const [teamMember] = await db
+    .select()
+    .from(teamMembers)
+    .where(eq(teamMembers.userId, session.userId))
+    .limit(1);
+
   if (!teamMember) return NextResponse.json({ error: { _: ["Not a team member."] } }, { status: 403 });
 
   // Only allow editing if you are the contract creator or an admin
