@@ -11,15 +11,15 @@ export const LayoutFooterSection = () => {
             <Link href="#" className="flex font-bold items-center">
               <ChevronsDownIcon className="w-9 h-9 mr-2 bg-gradient-to-tr from-primary via-primary/70 to-primary rounded-lg border border-secondary" />
 
-              <h3 className="text-2xl">Panda</h3>
+              <h3 className="text-2xl">AI Contract Generator</h3>
             </Link>
           </div>
 
           <div className="flex flex-col gap-2">
             <h3 className="font-bold text-lg">Contact</h3>
             <div>
-              <Link href="mailto:hello@panda.dev" className="opacity-60 hover:opacity-100">
-                hello@panda.dev
+              <Link href="mailto:hi@chirag.co" className="opacity-60 hover:opacity-100">
+                hi@chirag.co
               </Link>
             </div>
 
@@ -109,7 +109,7 @@ export const LayoutFooterSection = () => {
         <Separator className="my-6" />
         <section className="">
           <h3 className="">
-            &copy; 2026 Panda SaaS App Builder Starter.
+            &copy; 2026 AI Contract Generator. Owner: Chirag Dodiya, hi@chirag.co
             <Link
               target="_blank"
               href="https://nextjs.org"
