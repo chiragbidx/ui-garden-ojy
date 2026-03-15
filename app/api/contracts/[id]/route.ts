@@ -5,8 +5,18 @@ import { eq } from "drizzle-orm";
 import { getAuthSession } from "@/lib/auth/session";
 import { z } from "zod";
 
+// Helper to handle both Promise and non-Promise params
+async function getParams(context: { params: { id: string } } | { params: Promise<{ id: string }> }) {
+  if ('then' in context.params && typeof context.params.then === 'function') {
+    // params is a Promise
+    return await context.params;
+  }
+  return context.params;
+}
+
 // For GET (fetch one contract, for edit hydration)
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, context: { params: { id: string } } | { params: Promise<{ id: string }> }) {
+  const params = await getParams(context);
   const session = await getAuthSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -40,7 +50,8 @@ const editSchema = z.object({
 });
 
 // PATCH (edit)
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, context: { params: { id: string } } | { params: Promise<{ id: string }> }) {
+  const params = await getParams(context);
   const body = await req.json();
   const result = editSchema.safeParse(body);
   if (!result.success) return NextResponse.json({ error: result.error.flatten().fieldErrors }, { status: 422 });
