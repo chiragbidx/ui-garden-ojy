@@ -96,14 +96,14 @@ function AuthPageContent() {
       return {
         id: "signup",
         title: "Create account",
-        description: "Start your free account in less than a minute.",
+        description: "Start your free AI-powered contract workspace in less than a minute.",
       };
     }
 
     return {
       id: "signin",
       title: "Sign in",
-      description: "Use your email and password to continue.",
+      description: "Welcome to AI Contract Generator. Sign in to create, edit, e-sign, and export legal contracts with AI.",
     };
   }, [mode]);
 
@@ -115,21 +115,20 @@ function AuthPageContent() {
           <div className="relative z-10 flex h-full flex-col justify-between">
             <div className="space-y-4">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary/80">
-                Panda Access
+                AI Contract Generator
               </p>
               <h1 className="max-w-sm text-4xl font-semibold leading-tight tracking-tight">
-                Launch faster with one workspace for your team.
+                Contracts made easy with AI.
               </h1>
               <p className="max-w-md text-sm text-muted-foreground">
-                Secure auth, polished interface, and a clean onboarding flow built
-                for production teams.
+                Sign in or create a free account to generate and manage all your team's contracts in one secure dashboard.
               </p>
             </div>
 
             <div className="relative overflow-hidden rounded-2xl border border-secondary/70 bg-background/80 p-3 shadow-lg">
               <Image
                 src="/demo-img.jpg"
-                alt="Panda product preview"
+                alt="AI Contract Generator preview"
                 className="h-full w-full rounded-xl object-cover"
                 width={1200}
                 height={900}
