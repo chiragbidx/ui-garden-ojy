@@ -30,7 +30,7 @@ const contractSchema = z.object({
 export function NewContractForm() {
   const router = useRouter();
   const [step, setStep] = useState<"choose" | "customize" | "done">("choose");
-  const [draft, setDraft] = useState<{ title: string; content: string } | null>(null);
+  const [draft, setDraft] = useState<{ title: string; content: string; templateId?: string } | null>(null);
   const [loading, setLoading] = useState(false);
 
   const form = useForm<z.infer<typeof contractSchema>>({
@@ -55,11 +55,12 @@ export function NewContractForm() {
     }
     setLoading(true);
     if (values.method === "template") {
-      // For demo: insert placeholder content
+      // For demo, insert placeholder content
       setTimeout(() => {
         setDraft({
           title: "Demo Contract Title",
           content: "This is a sample contract based on template. Edit as needed...",
+          templateId: values.templateId,
         });
         setStep("customize");
         setLoading(false);
@@ -88,15 +89,28 @@ export function NewContractForm() {
     }
   }
 
-  function handleSave(values: z.infer<typeof contractSchema>) {
+  async function handleSave(values: z.infer<typeof contractSchema>) {
     setLoading(true);
-    // Save to DB (TODO: call server action)
-    setTimeout(() => {
+    // Wire to server action
+    const response = await fetch("/api/contracts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: values.title,
+        content: values.content,
+        templateId: draft?.templateId,
+      }),
+    });
+    if (response.ok) {
       setStep("done");
       setLoading(false);
       toast.success("Contract created");
       router.push("/dashboard/contracts");
-    }, 800);
+    } else {
+      const { error } = await response.json();
+      toast.error(error?.title?.[0] || error?.content?.[0] || "Could not create contract");
+      setLoading(false);
+    }
   }
 
   if (step === "done") {
