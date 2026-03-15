@@ -33,22 +33,16 @@ interface FeatureProps {
   description: string;
 }
 
-// Landing page logo config.
-// Update these values to customize the navbar logo name and icon styling.
 const LANDING_LOGO = {
-  name: "Panda",
+  name: "AI Contract Generator",
   iconClassName:
     "bg-gradient-to-tr border-secondary from-primary via-primary/70 to-primary rounded-lg w-9 h-9 mr-2 border text-white",
 };
 
 const routeList: RouteProps[] = [
   {
-    href: "/#testimonials",
-    label: "Testimonials",
-  },
-  {
-    href: "/#team",
-    label: "Team",
+    href: "/#features",
+    label: "Features",
   },
   {
     href: "/#contact",
@@ -62,16 +56,16 @@ const routeList: RouteProps[] = [
 
 const featureList: FeatureProps[] = [
   {
-    title: "Auth, Billing, Teams",
-    description: "Production-ready flows for sign-in, subscriptions, and organizations.",
+    title: "AI-Powered Contracts",
+    description: "Generate and edit legal agreements with OpenAI.",
   },
   {
-    title: "UI + Design System",
-    description: "Shadcn-based components with consistent theming and dark mode support.",
+    title: "Templates Library",
+    description: "Start from vetted NDA, Freelancer, or Service templates.",
   },
   {
-    title: "Deploy Fast",
-    description: "Sane defaults for Next.js, TypeScript, and Vercel-first deployment.",
+    title: "E-Signatures & Export",
+    description: "Request signatures and export as PDF or DOCX.",
   },
 ];
 
@@ -160,7 +154,7 @@ export const Navbar = () => {
               <div className="grid w-[600px] grid-cols-2 gap-5 p-4">
                 <Image
                   src="/demo-img.jpg"
-                  alt="Panda preview"
+                  alt="AI Contract Generator preview"
                   className="h-full w-full rounded-md object-cover"
                   width={600}
                   height={600}
