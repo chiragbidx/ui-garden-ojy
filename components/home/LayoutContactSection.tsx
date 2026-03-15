@@ -43,17 +43,14 @@ export const LayoutContactSection = () => {
       firstName: "",
       lastName: "",
       email: "",
-      subject: "Starter Demo",
+      subject: "Contact AI Contract Generator",
       message: "",
     },
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     const { firstName, lastName, email, subject, message } = values;
-    console.log(values);
-
-    const mailToLink = `mailto:hello@panda.dev?subject=${subject}&body=Hello, I am ${firstName} ${lastName}. My email is ${email}. %0D%0A${message}`;
-
+    const mailToLink = `mailto:hi@chirag.co?subject=${encodeURIComponent(subject)}&body=Hello, I am ${firstName} ${lastName}. My email is ${email}. %0D%0A${encodeURIComponent(message)}`;
     window.location.assign(mailToLink);
   }
 
@@ -66,11 +63,10 @@ export const LayoutContactSection = () => {
               Contact
             </h2>
 
-            <h2 className="text-3xl md:text-4xl font-bold">Talk to the Panda team</h2>
+            <h2 className="text-3xl md:text-4xl font-bold">Talk to the team</h2>
           </div>
           <p className="mb-8 text-muted-foreground lg:w-5/6">
-            Need help customizing the starter, planning architecture, or
-            accelerating launch? Share your goals and timeline.
+            Need help with AI contract automation, templates, or features? Share your legal goals and we’ll get back to you.
           </p>
 
           <div className="flex flex-col gap-4">
@@ -79,7 +75,6 @@ export const LayoutContactSection = () => {
                 <Building2 />
                 <div className="font-bold">Find us</div>
               </div>
-
               <div>Remote-first • San Francisco, CA</div>
             </div>
 
@@ -88,8 +83,7 @@ export const LayoutContactSection = () => {
                 <Phone />
                 <div className="font-bold">Call us</div>
               </div>
-
-              <div>+1 (415) 555-0199</div>
+              <div>(No phone support yet)</div>
             </div>
 
             <div>
@@ -97,16 +91,14 @@ export const LayoutContactSection = () => {
                 <Mail />
                 <div className="font-bold">Email us</div>
               </div>
-
-              <div>hello@panda.dev</div>
+              <div>hi@chirag.co</div>
             </div>
 
             <div>
               <div className="flex gap-2">
                 <Clock />
-                <div className="font-bold">Visit us</div>
+                <div className="font-bold">Hours</div>
               </div>
-
               <div>
                 <div>Monday - Friday</div>
                 <div>9AM - 6PM PT</div>
@@ -189,18 +181,20 @@ export const LayoutContactSection = () => {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="Starter Demo">
-                              Starter Demo
+                            <SelectItem value="Contact AI Contract Generator">
+                              Contact AI Contract Generator
                             </SelectItem>
-                            <SelectItem value="Architecture Review">
-                              Architecture Review
+                            <SelectItem value="Legal Templates">
+                              Legal Templates
                             </SelectItem>
-                            <SelectItem value="Design System">
-                              Design System
+                            <SelectItem value="Contract Automation">
+                              Contract Automation
                             </SelectItem>
-                            <SelectItem value="Billing Integration">Billing Integration</SelectItem>
-                            <SelectItem value="Enterprise Plan">
-                              Enterprise Plan
+                            <SelectItem value="Product Feedback">
+                              Product Feedback
+                            </SelectItem>
+                            <SelectItem value="Other">
+                              Other
                             </SelectItem>
                           </SelectContent>
                         </Select>
@@ -220,7 +214,7 @@ export const LayoutContactSection = () => {
                         <FormControl>
                           <Textarea
                             rows={5}
-                            placeholder="Tell us about your SaaS idea, stage, and timeline..."
+                            placeholder="Tell us about your contract needs, business, and timeline…"
                             className="resize-none"
                             {...field}
                           />
