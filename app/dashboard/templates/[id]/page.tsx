@@ -4,10 +4,13 @@ import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-export default async function TemplateDetailPage({ params }: { params: { id: string } }) {
+export default async function TemplateDetailPage({ params }: { params: { id: string } } | { params: Promise<{ id: string }> }) {
+  const _params = "then" in params && typeof params.then === "function" ? await params : params;
+  const id = _params.id;
+
   return (
     <Suspense fallback={<div className="py-8 text-center">Loading template…</div>}>
-      <TemplateDetail id={params.id} />
+      <TemplateDetail id={id} />
     </Suspense>
   );
 }
