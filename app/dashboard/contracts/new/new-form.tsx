@@ -12,7 +12,6 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import Link from "next/link";
 
-// Placeholder templates (should be fetched from API)
 const placeholderTemplates = [
   { id: "tpl-nda", name: "NDA (Non-Disclosure Agreement)" },
   { id: "tpl-freelancer", name: "Freelancer Agreement" },
@@ -32,6 +31,7 @@ export function NewContractForm() {
   const [step, setStep] = useState<"choose" | "customize" | "done">("choose");
   const [draft, setDraft] = useState<{ title: string; content: string; templateId?: string } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof contractSchema>>({
     resolver: zodResolver(contractSchema),
@@ -44,7 +44,8 @@ export function NewContractForm() {
     },
   });
 
-  function handleChooseMethod(values: z.infer<typeof contractSchema>) {
+  async function handleChooseMethod(values: z.infer<typeof contractSchema>) {
+    setAiError(null);
     if (values.method === "template" && !values.templateId) {
       form.setError("templateId", { message: "Select a template" });
       return;
@@ -66,32 +67,39 @@ export function NewContractForm() {
         setLoading(false);
       }, 800);
     } else {
-      // Call OpenAI API (TODO: replace with server action)
-      fetch("/api/ai/generate-contract", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: values.aiPrompt }),
-      })
-        .then((res) =>
-          res.ok ? res.json() : Promise.reject("Failed to generate contract")
-        )
-        .then((data) => {
+      // Robust AI call with error handling
+      try {
+        const res = await fetch("/api/ai/generate-contract", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: values.aiPrompt }),
+        });
+        if (!res.ok) {
+          let msg = "AI generation failed";
+          try {
+            const errorJson = await res.json();
+            msg = errorJson.error || msg;
+          } catch {}
+          setAiError(msg);
+          toast.error(msg);
+        } else {
+          const data = await res.json();
           setDraft({
             title: data.title || "Generated Contract",
             content: data.content || "AI generated contract content...",
           });
           setStep("customize");
-        })
-        .catch(() => {
-          toast.error("AI generation failed");
-        })
-        .finally(() => setLoading(false));
+        }
+      } catch (err) {
+        setAiError("Could not reach AI service.");
+        toast.error("Could not reach AI service.");
+      }
+      setLoading(false);
     }
   }
 
   async function handleSave(values: z.infer<typeof contractSchema>) {
     setLoading(true);
-    // Wire to server action
     const response = await fetch("/api/contracts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -203,6 +211,12 @@ export function NewContractForm() {
           )}
         />
 
+        {aiError && (
+          <div className="p-3 rounded-md border border-destructive/20 bg-destructive/10 text-destructive mt-2 text-sm">
+            {aiError}
+          </div>
+        )}
+
         {form.watch("method") === "template" ? (
           <FormField
             control={form.control}
@@ -242,6 +256,7 @@ export function NewContractForm() {
                   {...field}
                   placeholder="e.g. Generate a freelancer agreement for a web designer hiring a marketing agency."
                   rows={4}
+                  disabled={loading}
                 />
                 <FormMessage />
               </FormItem>
