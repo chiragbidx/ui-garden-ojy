@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -33,6 +33,7 @@ export function NewContractForm() {
   const [loading, setLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
 
+  // Use react-hook-form for state *without* default content/title for "choose" step
   const form = useForm<z.infer<typeof contractSchema>>({
     resolver: zodResolver(contractSchema),
     defaultValues: {
@@ -42,9 +43,12 @@ export function NewContractForm() {
       title: "",
       content: "",
     },
+    mode: "onChange",
   });
 
-  async function handleChooseMethod(values: z.infer<typeof contractSchema>) {
+  // Ensure that "Generate with AI" click triggers correct form values and handler.
+  // This function now *forces* method:ai, and syncs the used prompt ('aiPrompt') field.
+  async function handleFormSubmit(values: z.infer<typeof contractSchema>) {
     setAiError(null);
     if (values.method === "template" && !values.templateId) {
       form.setError("templateId", { message: "Select a template" });
@@ -56,7 +60,6 @@ export function NewContractForm() {
     }
     setLoading(true);
     if (values.method === "template") {
-      // For demo, insert placeholder content
       setTimeout(() => {
         setDraft({
           title: "Demo Contract Title",
@@ -67,12 +70,14 @@ export function NewContractForm() {
         setLoading(false);
       }, 800);
     } else {
-      // Robust AI call with error handling
       try {
+        // Defensive: ensure we pick the latest value (needed if the form does not update fast enough)
+        const prompt =
+          form.getValues("aiPrompt") || values.aiPrompt || "";
         const res = await fetch("/api/ai/generate-contract", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt: values.aiPrompt }),
+          body: JSON.stringify({ prompt }),
         });
         if (!res.ok) {
           let msg = "AI generation failed";
@@ -179,12 +184,12 @@ export function NewContractForm() {
     );
   }
 
-  // initial step: choose template or AI
+  // The "choose" step - two separate buttons with explicit event binding for AI and Template
   return (
     <Form {...form}>
       <form
         className="space-y-8 max-w-lg"
-        onSubmit={form.handleSubmit(handleChooseMethod)}
+        onSubmit={form.handleSubmit(handleFormSubmit)}
       >
         <FormField
           control={form.control}
@@ -194,7 +199,10 @@ export function NewContractForm() {
               <FormLabel>Start with</FormLabel>
               <Select
                 value={field.value}
-                onValueChange={(val) => form.setValue("method", val as any)}
+                onValueChange={(val) => {
+                  form.setValue("method", val as any);
+                  setAiError(null);
+                }}
               >
                 <FormControl>
                   <SelectTrigger>
@@ -254,6 +262,8 @@ export function NewContractForm() {
                 <FormLabel>Describe your contract need (AI will generate draft)</FormLabel>
                 <Textarea
                   {...field}
+                  value={field.value || ""}
+                  onChange={field.onChange}
                   placeholder="e.g. Generate a freelancer agreement for a web designer hiring a marketing agency."
                   rows={4}
                   disabled={loading}
@@ -264,13 +274,28 @@ export function NewContractForm() {
           />
         )}
 
-        <Button type="submit" disabled={loading}>
-          {loading
-            ? "Loading..."
-            : form.watch("method") === "ai"
-            ? "Generate with AI"
-            : "Use Template"}
-        </Button>
+        {/* For extra clarity, split "Use Template" and "Generate with AI" buttons */}
+        {form.watch("method") === "ai" ? (
+          <Button
+            type="submit"
+            disabled={loading}
+            onClick={() => {
+              form.setValue("method", "ai");
+            }}
+          >
+            {loading ? "Loading..." : "Generate with AI"}
+          </Button>
+        ) : (
+          <Button
+            type="submit"
+            disabled={loading}
+            onClick={() => {
+              form.setValue("method", "template");
+            }}
+          >
+            {loading ? "Loading..." : "Use Template"}
+          </Button>
+        )}
       </form>
     </Form>
   );
